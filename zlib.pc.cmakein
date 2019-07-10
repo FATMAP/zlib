@@ -6,7 +6,7 @@ includedir=@INSTALL_INC_DIR@
 
 Name: zlib
 Description: zlib compression library
-Version: @VERSION@
+Version: @PROJECT_VERSION@
 
 Requires:
 Libs: -L${libdir} -L${sharedlibdir} -lz
