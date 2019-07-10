@@ -19,6 +19,9 @@ set(INSTALL_INC_DIR "${CMAKE_INSTALL_INCLUDEDIR}" CACHE PATH "Installation direc
 set(INSTALL_MAN_DIR "${CMAKE_INSTALL_MANDIR}" CACHE PATH "Installation directory for manual pages")
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_DATADIR}/pkgconfig" CACHE PATH "Installation directory for pkgconfig (.pc) files")
 
+set (ZLIB_SKIP_STATIC_INSTALL "FALSE" CACHE BOOL "Skip installing static library.")
+set (ZLIB_SKIP_SHARED_INSTALL "FALSE" CACHE BOOL "Skip installing shared library.")
+
 include(CheckTypeSize)
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -221,25 +224,49 @@ elseif(WIN32)
     set_target_properties(zlib PROPERTIES SUFFIX "1.dll")
 endif()
 
+
+
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
-    install(TARGETS zlib zlibstatic
-        EXPORT ZLIBTargets
-        RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
-        ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
-        LIBRARY DESTINATION "${INSTALL_LIB_DIR}")
-    install(EXPORT ZLIBTargets
-        NAMESPACE ZLIB::
-        DESTINATION lib/cmake/ZLIB)
-    include(CMakePackageConfigHelpers)
-    write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfigVersion.cmake"
-        VERSION ${PROJECT_VERSION}
-        COMPATIBILITY SameMajorVersion)
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfig.cmake"
-        "include(\"\${CMAKE_CURRENT_LIST_DIR}/ZLIBTargets.cmake\")"
-        )
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfigVersion.cmake"
-        DESTINATION lib/cmake/ZLIB)
+    set (INSTALL_TARGETS zlib zlibstatic)
+
+    if (${ZLIB_SKIP_STATIC_INSTALL})
+        list (REMOVE_ITEM INSTALL_TARGETS zlibstatic)
+    endif()
+
+    if (${ZLIB_SKIP_SHARED_INSTALL})
+        list (REMOVE_ITEM INSTALL_TARGETS zlib)
+    endif()
+
+    list (LENGTH INSTALL_TARGETS INSTALL_TARGETS_COUNT)
+    if (${INSTALL_TARGETS_COUNT} GREATER 0)
+
+        install(TARGETS ${INSTALL_TARGETS}
+                EXPORT ZLIBTargets
+                RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
+                ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
+                LIBRARY DESTINATION "${INSTALL_LIB_DIR}")
+
+        install(EXPORT ZLIBTargets
+            NAMESPACE ZLIB::
+            DESTINATION lib/cmake/ZLIB)
+
+        include(CMakePackageConfigHelpers)
+
+        write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfigVersion.cmake"
+            VERSION ${PROJECT_VERSION}
+            COMPATIBILITY SameMajorVersion)
+
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfig.cmake"
+            "include(\"\${CMAKE_CURRENT_LIST_DIR}/ZLIBTargets.cmake\")"
+            )
+
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfig.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/ZLIBConfigVersion.cmake"
+            DESTINATION lib/cmake/ZLIB)
+
+    else()
+        message (STATUS "Skipping binaries install.")
+    endif()
 endif()
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL )
     install(FILES ${ZLIB_PUBLIC_HDRS} DESTINATION "${INSTALL_INC_DIR}")
