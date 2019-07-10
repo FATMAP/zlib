@@ -21,6 +21,7 @@ set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_DATADIR}/pkgconfig" CACHE PATH "Insta
 
 set (ZLIB_SKIP_STATIC_INSTALL "FALSE" CACHE BOOL "Skip installing static library.")
 set (ZLIB_SKIP_SHARED_INSTALL "FALSE" CACHE BOOL "Skip installing shared library.")
+option(ZLIB_BUILD_TESTING "Skip building testing tree." TRUE)
 
 include(CheckTypeSize)
 include(CheckFunctionExists)
@@ -33,6 +34,7 @@ check_include_file(stdint.h    HAVE_STDINT_H)
 check_include_file(stddef.h    HAVE_STDDEF_H)
 
 set (COMMON_COMPILE_DEFINITION)
+set (BUILD_TESTING ${ZLIB_BUILD_TESTING})
 
 #
 # Check to see if we have large file support
