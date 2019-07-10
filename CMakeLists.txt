@@ -32,6 +32,8 @@ check_include_file(sys/types.h HAVE_SYS_TYPES_H)
 check_include_file(stdint.h    HAVE_STDINT_H)
 check_include_file(stddef.h    HAVE_STDDEF_H)
 
+set (COMMON_COMPILE_DEFINITION)
+
 #
 # Check to see if we have large file support
 #
@@ -50,7 +52,7 @@ if(HAVE_STDDEF_H)
 endif()
 check_type_size(off64_t OFF64_T)
 if(HAVE_OFF64_T)
-    add_definitions(-D_LARGEFILE64_SOURCE=1)
+    list (APPEND COMMON_COMPILE_DEFINITION _LARGEFILE64_SOURCE=1)
 endif()
 set(CMAKE_REQUIRED_DEFINITIONS) # clear variable
 
@@ -200,6 +202,14 @@ target_include_directories(${STATIC_LIBRARY_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>)
+
+set_target_properties(
+    ${SHARED_LIBRARY_NAME}
+    ${STATIC_LIBRARY_NAME}
+    PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS ${COMMON_COMPILE_DEFINITION}
+    COMPILE_DEFINITIONS ${COMMON_COMPILE_DEFINITION}
+)
 
 add_library(ZLIB::ZLIB ALIAS ${SHARED_LIBRARY_NAME})
 add_library(ZLIB::ZLIB ALIAS ${STATIC_LIBRARY_NAME})
