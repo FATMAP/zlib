@@ -19,8 +19,8 @@ set(INSTALL_INC_DIR "${CMAKE_INSTALL_INCLUDEDIR}" CACHE PATH "Installation direc
 set(INSTALL_MAN_DIR "${CMAKE_INSTALL_MANDIR}" CACHE PATH "Installation directory for manual pages")
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_DATADIR}/pkgconfig" CACHE PATH "Installation directory for pkgconfig (.pc) files")
 
-set (ZLIB_SKIP_STATIC_INSTALL "FALSE" CACHE BOOL "Skip installing static library.")
-set (ZLIB_SKIP_SHARED_INSTALL "FALSE" CACHE BOOL "Skip installing shared library.")
+option(ZLIB_SKIP_STATIC_INSTALL "Skip installing static library." FALSE)
+option(ZLIB_SKIP_SHARED_INSTALL "Skip installing shared library." FALSE)
 option(ZLIB_BUILD_TESTING "Skip building testing tree." TRUE)
 
 include(CheckTypeSize)
