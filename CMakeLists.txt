@@ -183,23 +183,26 @@ if(MINGW)
     set(ZLIB_DLL_SRCS ${CMAKE_CURRENT_BINARY_DIR}/zlib1rc.obj)
 endif(MINGW)
 
-add_library(zlib SHARED ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_DLL_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
-target_include_directories(zlib PUBLIC
+set (STATIC_LIBRARY_NAME "zlibstatic")
+set (SHARED_LIBRARY_NAME "zlib")
+
+add_library(${SHARED_LIBRARY_NAME} SHARED ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_DLL_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+target_include_directories(${SHARED_LIBRARY_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>)
-set_target_properties(zlib PROPERTIES
+set_target_properties(${SHARED_LIBRARY_NAME} PROPERTIES
     DEFINE_SYMBOL ZLIB_DLL
     SOVERSION ${PROJECT_VERSION_MAJOR})
 
-add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
-target_include_directories(zlibstatic PUBLIC
+add_library(${STATIC_LIBRARY_NAME} STATIC ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+target_include_directories(${STATIC_LIBRARY_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>)
 
-add_library(ZLIB::ZLIB ALIAS zlib)
-add_library(ZLIB::ZLIB ALIAS zlibstatic)
+add_library(ZLIB::ZLIB ALIAS ${SHARED_LIBRARY_NAME})
+add_library(ZLIB::ZLIB ALIAS ${STATIC_LIBRARY_NAME})
 
 if(NOT CYGWIN)
     # This property causes shared libraries on Linux to have the full version
@@ -209,32 +212,32 @@ if(NOT CYGWIN)
     #
     # This has no effect with MSVC, on that platform the version info for
     # the DLL comes from the resource file win32/zlib1.rc
-    set_target_properties(zlib PROPERTIES VERSION ${PROJECT_VERSION})
-    set_target_properties(zlibstatic PROPERTIES VERSION ${PROJECT_VERSION})
+    set_target_properties(${SHARED_LIBRARY_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+    set_target_properties(${STATIC_LIBRARY_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 endif()
 
 if(UNIX)
     # On unix-like platforms the library is almost always called libz
-    set_target_properties(zlib zlibstatic PROPERTIES OUTPUT_NAME z)
+    set_target_properties(${SHARED_LIBRARY_NAME} ${STATIC_LIBRARY_NAME} PROPERTIES OUTPUT_NAME z)
     if(NOT APPLE)
-        set_target_properties(zlib PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/zlib.map\"")
+        set_target_properties(${SHARED_LIBRARY_NAME} PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/zlib.map\"")
     endif()
 elseif(WIN32)
     # Creates zlib1.dll when building shared library version
-    set_target_properties(zlib PROPERTIES SUFFIX "1.dll")
+    set_target_properties(${SHARED_LIBRARY_NAME} PROPERTIES SUFFIX "1.dll")
 endif()
 
 
 
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
-    set (INSTALL_TARGETS zlib zlibstatic)
+    set (INSTALL_TARGETS ${SHARED_LIBRARY_NAME} ${STATIC_LIBRARY_NAME})
 
     if (${ZLIB_SKIP_STATIC_INSTALL})
-        list (REMOVE_ITEM INSTALL_TARGETS zlibstatic)
+        list (REMOVE_ITEM INSTALL_TARGETS ${STATIC_LIBRARY_NAME})
     endif()
 
     if (${ZLIB_SKIP_SHARED_INSTALL})
-        list (REMOVE_ITEM INSTALL_TARGETS zlib)
+        list (REMOVE_ITEM INSTALL_TARGETS ${SHARED_LIBRARY_NAME})
     endif()
 
     list (LENGTH INSTALL_TARGETS INSTALL_TARGETS_COUNT)
@@ -281,20 +284,20 @@ endif()
 #============================================================================
 if(BUILD_TESTING)
     add_executable(example test/example.c)
-    target_link_libraries(example zlib)
+    target_link_libraries(example ${SHARED_LIBRARY_NAME})
     add_test(example example)
 
     add_executable(minigzip test/minigzip.c)
-    target_link_libraries(minigzip zlib)
+    target_link_libraries(minigzip ${SHARED_LIBRARY_NAME})
 
     if(HAVE_OFF64_T)
         add_executable(example64 test/example.c)
-        target_link_libraries(example64 zlib)
+        target_link_libraries(example64 ${SHARED_LIBRARY_NAME})
         set_target_properties(example64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
         add_test(example64 example64)
 
         add_executable(minigzip64 test/minigzip.c)
-        target_link_libraries(minigzip64 zlib)
+        target_link_libraries(minigzip64 ${SHARED_LIBRARY_NAME})
         set_target_properties(minigzip64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
     endif()
 endif()
